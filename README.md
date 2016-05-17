@@ -1,6 +1,6 @@
 # /r
 
-This a place for me to safe random code snippets.
+A place to save random things.
 
 
 
