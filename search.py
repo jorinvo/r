@@ -1,3 +1,20 @@
+'''
+This is a demonstration of how to implement a search engine.
+
+All options are configured at the top of the file.
+The script searches on a given website for given queries and
+outputs the ranked results.
+
+First, all subpages are crawled and parsed.
+Next, the PageRank is calculated based
+on the link structure of the pages.
+Then an index of all terms is created,
+weighted (using tf-idf) and normalized.
+Last, the cosine distance between each query
+and each document is calculated.
+The order of the search result is based on a combination
+of the PageRank and cosine score.
+'''
 import re
 from urllib.parse import urljoin, urlparse
 from urllib.request import urlopen
@@ -21,7 +38,7 @@ stop_words = [
 ]
 
 queries = [
-    ['python'],
+    ['react'],
     ['zip'],
     ['git'],
     ['go', 'ruby']
@@ -257,7 +274,7 @@ def cosine_score(index, N, query):
 
     Returns a sorted list of tuples (url, score).
 
-    Score is calculated using the cosinus distance
+    Score is calculated using the cosine distance
     between document and query.
     '''
     scores = defaultdict(int)
@@ -274,7 +291,7 @@ def combined_search(index, N, rank, query):
     '''
     Returns a sorted list of tuples (url, score).
 
-    Score is the product of the cosinus score and the PageRank.
+    Score is the product of the cosine score and the PageRank.
     '''
     scores = cosine_score(index, N, query)
     combined = [(doc, score * rank[doc]) for doc, score in scores]
@@ -287,6 +304,7 @@ def print_combined_search(index, N, rank):
         print(' '.join(query))
         for url, score in combined_search(index, N, rank, query):
             print('%.6f   %s' % (score, url))
+        print()
 
 
 if __name__ == "__main__":
