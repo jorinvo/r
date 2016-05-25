@@ -29,17 +29,16 @@ queries = [
 
 
 def main():
-    # doing all the calculations
-    frontier = crawl(seed)
-    link_structure = create_link_structure(frontier)
-    ranks = page_rank(link_structure)
-    rank = best_rank(ranks, link_structure)
-    N = len(link_structure)
-    index = create_index(link_structure)
+    # Computing
+    pages = crawl(seed)
+    ranks = page_rank(pages)
+    rank = best_rank(ranks, pages)
+    N = len(pages)
+    index = create_index(pages)
     weighted_index = weight_index(index, N)
     norm_index = normalize_index(weighted_index)
 
-    # pretty print results
+    # Print results
     print()
     print('Index size:', len(index))
     print('Interations for PageRank:', len(ranks))
@@ -49,28 +48,24 @@ def main():
 
 # Crawler
 
-def crawl(urls, frontier={}, bases=None):
+def crawl(urls, _frontier={}, _bases=None):
     '''
     Takes a list of urls as argument and crawls them recursivly until
     no new url can be found.
 
-    Returns a dict with urls as keys and
-    tuples (name, content, links) as values.
-    Links is a list of urls.
+    Returns a sorted list of tuples (url, content, links).
+    `links` is a list of urls.
     '''
-    def norm(urls):
-        return [u.rstrip('/') for u in urls]
-
-    if not bases:
-        bases = [urlparse(url).netloc for url in urls]
-    for url in norm(urls):
-        if url in frontier:
+    if not _bases:
+        _bases = [urlparse(u).netloc for u in urls]
+    for url in [u.rstrip('/') for u in urls]:
+        if url in _frontier:
             continue
-        page = parse(download(url), url, bases)
+        page = parse(download(url), url, _bases)
         print('crawled %s with %s links' % (url, len(page[2])))
-        frontier[url] = page
-        crawl(page[2], frontier, bases)
-    return frontier
+        _frontier[url] = page
+        crawl(page[2], _frontier, _bases)
+    return sorted(_frontier.values())
 
 
 def download(url):
@@ -81,38 +76,26 @@ def parse(html, url, bases):
     '''
     Takes an html string and a url as arguments.
 
-    Returns a tuple (name, content, links) parsed from the html.
+    Returns a tuple (url, content, links) parsed from the html.
     '''
     soup = BeautifulSoup(html, 'lxml')
 
     content = soup.body.get_text().strip()
 
-    links = [urljoin(url, link.get('href')) for link in soup.findAll('a')]
-    links = [link for link in links if urlparse(link).netloc in bases]
-    return soup.title.string, content, links
+    links = [urljoin(url, l.get('href')) for l in soup.findAll('a')]
+    links = [l for l in links if urlparse(l).netloc in bases]
+    return url, content, links
 
 
-def create_link_structure(frontier):
-    '''
-    Takes the frontier dict.
-
-    Returns a sorted list of tuples (name, content, links).
-    links are formatted as names.
-    '''
-    return sorted([(url, page[1], page[2]) for url, page in frontier.items()])
-
-
-# PageRank
-
-def page_rank(link_structure):
+def page_rank(pages):
     '''
     Returns a matrix with documents as columns
     and values for each round as rows.
 
     Number of rows depends on how long it takes to reach the target_delta.
     '''
-    N = len(link_structure)
-    transition_matrix = create_transition_matrix(link_structure)
+    N = len(pages)
+    transition_matrix = create_transition_matrix(pages)
     ranks_in_steps = [[1 / N] * N]
     while True:
         possibilities = ranks_in_steps[-1] * transition_matrix
@@ -122,25 +105,25 @@ def page_rank(link_structure):
             return ranks_in_steps
 
 
-def create_transition_matrix(link_structure):
+def create_transition_matrix(pages):
     '''
-    Returns a matrix with document names as rows
+    Returns a matrix with document urls as rows
     and document links as columns.
 
     Each cell contains the propability for a document
     to transition to a link.
     '''
-    links = [links for name, content, links in link_structure]
-    names = get_names(link_structure)
-    N = len(link_structure)
-    m = np.matrix([[weight_link(N, n, l) for n in names] for l in links])
+    links = get_links(pages)
+    urls = get_urls(pages)
+    N = len(pages)
+    m = np.matrix([[weight_link(N, u, l) for u in urls] for l in links])
     return teleport(N, m)
 
 
-def weight_link(N, name, links):
+def weight_link(N, url, links):
     if not links:
         return 1 / N
-    if name in links:
+    if url in links:
         return 1 / len(links)
     else:
         return 0
@@ -154,32 +137,36 @@ def get_delta(a, b):
     return np.abs(a - b).sum()
 
 
-def best_rank(ranks, link_structure):
+def get_urls(pages):
+    return [url for url, content, links in pages]
+
+
+def get_links(pages):
+    return [links for url, content, links in pages]
+
+
+def best_rank(ranks, pages):
     '''
-    Returns a dict with document names as keys
+    Returns a dict with document urls as keys
     and their ranks as values.
     '''
-    return dict(zip(get_names(link_structure), ranks[-1]))
-
-
-def get_names(link_structure):
-    return [name for name, content, links in link_structure]
+    return dict(zip(get_urls(pages), ranks[-1]))
 
 
 # Index
 
-def create_index(link_structure):
+def create_index(pages):
     '''
     Returns the index as a dict with terms as keys
-    and lists tuples(name, count) as values.
+    and lists tuples(url, count) as values.
 
     Count says how many times the term occured in the document.
     '''
     index = defaultdict(list)
-    for name, content, links in link_structure:
+    for url, content, links in pages:
         counts = count_terms(content)
         for term, count in counts.items():
-            index[term].append((name, count))
+            index[term].append((url, count))
     return index
 
 
@@ -213,12 +200,11 @@ def weight_index(index, N):
     Returns a new index with tf_idf weights instead of simple counts.
     '''
     weighted_index = defaultdict(list)
-    for term in index:
-        docs = index[term]
+    for term, docs in index.items():
         df = len(docs)
-        for name, count in docs:
+        for url, count in docs:
             weight = tf_idf(count, N, df)
-            weighted_index[term].append((name, weight))
+            weighted_index[term].append((url, weight))
     return weighted_index
 
 
@@ -242,15 +228,15 @@ def normalize_index(index):
     '''
     lengths = doc_lengths(index)
     norm_index = defaultdict(list)
-    for term in index:
-        for name, weight in index[term]:
-            norm_index[term].append((name, weight / lengths[name]))
+    for term, docs in index.items():
+        for url, weight in docs:
+            norm_index[term].append((url, weight / lengths[url]))
     return norm_index
 
 
 def doc_lengths(index):
     '''
-    Returns a dict with document names as keys
+    Returns a dict with document urls as keys
     and vector lengths as values.
 
     The length is calculated using the vector of weights
@@ -258,9 +244,9 @@ def doc_lengths(index):
     '''
     doc_vectors = defaultdict(list)
     for docs in index.values():
-        for name, weight in docs:
-            doc_vectors[name].append(weight)
-    return {name: np.linalg.norm(doc) for name, doc in doc_vectors.items()}
+        for url, weight in docs:
+            doc_vectors[url].append(weight)
+    return {url: np.linalg.norm(doc) for url, doc in doc_vectors.items()}
 
 
 # Search & Scoring
@@ -269,24 +255,24 @@ def cosine_score(index, N, query):
     '''
     query is a list of terms.
 
-    Returns a sorted list of tuples (name, score).
+    Returns a sorted list of tuples (url, score).
 
     Score is calculated using the cosinus distance
     between document and query.
     '''
     scores = defaultdict(int)
     qw = {t: tf_idf(1, N, len(index[t])) for t in query if t in index}
-    query_len = np.linalg.norm(qw.values())
+    query_len = np.linalg.norm(list(qw.values()))
     for term in qw:
         query_weight = qw[term] / query_len
-        for name, weight in index[term]:
-            scores[name] += weight * query_weight
+        for url, weight in index[term]:
+            scores[url] += weight * query_weight
     return sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
 
 def combined_search(index, N, rank, query):
     '''
-    Returns a sorted list of tuples (name, score).
+    Returns a sorted list of tuples (url, score).
 
     Score is the product of the cosinus score and the PageRank.
     '''
@@ -299,8 +285,8 @@ def print_combined_search(index, N, rank):
     print('Search results:\n')
     for query in queries:
         print(' '.join(query))
-        for name, score in combined_search(index, N, rank, query):
-            print('%.6f   %s' % (score, name))
+        for url, score in combined_search(index, N, rank, query):
+            print('%.6f   %s' % (score, url))
 
 
 if __name__ == "__main__":
