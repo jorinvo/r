@@ -1,5 +1,6 @@
 '''
 This is a demonstration of how to implement a search engine.
+Only intended for educational use.
 
 All options are configured at the top of the file.
 The script searches on a given website for given queries and
@@ -14,22 +15,23 @@ Last, the cosine distance between each query
 and each document is calculated.
 The order of the search result is based on a combination
 of the PageRank and cosine score.
+
+Example:
+    python search.py 'ruby go' https://jorin.me
 '''
+
 import re
+import argparse
 from urllib.parse import urljoin, urlparse
 from urllib.request import urlopen
+from urllib.error import HTTPError
 from collections import Counter, defaultdict
 from math import log10
 from bs4 import BeautifulSoup
 import numpy as np
 
-
 teleportation = 0.05
 target_delta = 0.04
-
-seed = [
-    'https://jorin.me/'
-]
 
 stop_words = [
     'a', 'also', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'do',
@@ -37,17 +39,11 @@ stop_words = [
     'that', 'the', 'this', 'to', 'we'
 ]
 
-queries = [
-    ['react'],
-    ['zip'],
-    ['git'],
-    ['go', 'ruby']
-]
-
 
 def main():
+    args = get_args()
     # Computing
-    pages = crawl(seed)
+    pages = crawl(args.url)
     ranks = page_rank(pages)
     rank = best_rank(ranks, pages)
     N = len(pages)
@@ -57,13 +53,34 @@ def main():
 
     # Print results
     print()
-    print('Index size:', len(index))
+    print('Number of pages:', len(pages))
+    print('Terms in index:', len(index))
     print('Interations for PageRank:', len(ranks))
     print()
-    print_combined_search(norm_index, N, rank)
+    print_combined_search(norm_index, N, rank, args.query)
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        'query',
+        type=str,
+        help='Search query string can contain multiple words'
+    )
+    parser.add_argument(
+        'url',
+        type=str,
+        nargs='+',
+        help='At least one seed url for the crawler to start from'
+    )
+    return parser.parse_args()
 
 
 # Crawler
+
 
 def crawl(urls, _frontier={}, _bases=None):
     '''
@@ -78,7 +95,13 @@ def crawl(urls, _frontier={}, _bases=None):
     for url in [u.rstrip('/') for u in urls]:
         if url in _frontier:
             continue
-        page = parse(download(url), url, _bases)
+        try:
+            response = download(url)
+        except HTTPError as e:
+            print(e, url)
+            continue
+
+        page = parse(response, url, _bases)
         print('crawled %s with %s links' % (url, len(page[2])))
         _frontier[url] = page
         crawl(page[2], _frontier, _bases)
@@ -270,7 +293,7 @@ def doc_lengths(index):
 
 def cosine_score(index, N, query):
     '''
-    query is a list of terms.
+    query is a string of terms.
 
     Returns a sorted list of tuples (url, score).
 
@@ -278,7 +301,8 @@ def cosine_score(index, N, query):
     between document and query.
     '''
     scores = defaultdict(int)
-    qw = {t: tf_idf(1, N, len(index[t])) for t in query if t in index}
+    terms = query.split()
+    qw = {t: tf_idf(1, N, len(index[t])) for t in terms if t in index}
     query_len = np.linalg.norm(list(qw.values()))
     for term in qw:
         query_weight = qw[term] / query_len
@@ -298,13 +322,10 @@ def combined_search(index, N, rank, query):
     return sorted(combined, key=lambda x: x[1], reverse=True)
 
 
-def print_combined_search(index, N, rank):
-    print('Search results:\n')
-    for query in queries:
-        print(' '.join(query))
-        for url, score in combined_search(index, N, rank, query):
-            print('%.6f   %s' % (score, url))
-        print()
+def print_combined_search(index, N, rank, query):
+    print('Search results for "%s":' % (query))
+    for url, score in combined_search(index, N, rank, query):
+        print('%.6f  %s' % (score, url))
 
 
 if __name__ == "__main__":
