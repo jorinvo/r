@@ -14,7 +14,7 @@ weighted (using tf-idf) and normalized.
 Last, the cosine distance between each query
 and each document is calculated.
 The order of the search result is based on a combination
-of the PageRank and cosine score.
+of the PageRank and cosine similarity.
 
 Example:
     python search.py 'ruby go' https://jorin.me
@@ -291,7 +291,7 @@ def doc_lengths(index):
 
 # Search & Scoring
 
-def cosine_score(index, N, query):
+def cosine_similarity(index, N, query):
     '''
     query is a string of terms.
 
@@ -315,9 +315,9 @@ def combined_search(index, N, rank, query):
     '''
     Returns a sorted list of tuples (url, score).
 
-    Score is the product of the cosine score and the PageRank.
+    Score is the product of the cosine similarity and the PageRank.
     '''
-    scores = cosine_score(index, N, query)
+    scores = cosine_similarity(index, N, query)
     combined = [(doc, score * rank[doc]) for doc, score in scores]
     return sorted(combined, key=lambda x: x[1], reverse=True)
 
