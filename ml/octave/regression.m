@@ -37,24 +37,24 @@ function [thetas, rmses] = lr(x, y, a, n, t)
 end
 
 
-function y = hypothesis(thetas, x)
-  y = sum(x .* thetas, 2);
+function prediction = hypothesis(thetas, x)
+  prediction = sum(x .* thetas, 2);
 end
 
 
-function y = normalize(A)
+function N = normalize(A)
   minA = min(A);
-  y = (A - minA) ./ (max(A) - minA);
+  N = (A - minA) ./ (max(A) - minA);
 end
 
-function y = denormalize(A, B)
+function D = denormalize(A, B)
   minB = min(B);
-  y = A .* (max(B) - minB) + minB;
+  D = A .* (max(B) - minB) + minB;
 end;
 
 
-function y = rmse(y, r)
-  y = sqrt(sum((y .- r) .^ 2) / length(y));
+function err = rmse(y, r)
+  err = sqrt(sum((y .- r) .^ 2) / length(y));
 end
 
 

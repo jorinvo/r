@@ -19,7 +19,7 @@ mpg = cars(:, 7);
 
 
 % Evolution Strategy
-function y = es(c, p, records, y, sigma, rounds)
+function model = es(c, p, records, y, sigma, rounds)
   cols = columns(records);
 
   % Start with random models as parents
@@ -36,36 +36,36 @@ function y = es(c, p, records, y, sigma, rounds)
   end
 
   % Return best parent
-  y = bestmodels(parents, 1, records, y);
+  model = bestmodels(parents, 1, records, y);
 end
 
 
 
-function y = hypothesis(thetas, x, y)
-  y = denormalize(sum(normalize(x) .* thetas, 2), y);
+function prediction = hypothesis(thetas, x, y)
+  prediction = denormalize(sum(normalize(x) .* thetas, 2), y);
 end
 
 
-function y = bestmodels(models, num, records, y)
+function M = bestmodels(models, num, records, y)
   rs = cellfun(@(x) rmse(y, hypothesis(x, records, y)), num2cell(models, 2));
   [_, indices] = sort(rs);
-  y = models(indices(1:num),:);
+  M = models(indices(1:num),:);
 end
 
 
-function y = normalize(A)
+function N = normalize(A)
   minA = min(A);
-  y = (A - minA) ./ (max(A) - minA);
+  N = (A - minA) ./ (max(A) - minA);
 end
 
-function y = denormalize(A, B)
+function D = denormalize(A, B)
   minB = min(B);
-  y = A .* (max(B) - minB) + minB;
+  D = A .* (max(B) - minB) + minB;
 end
 
 
-function y = rmse(y, r)
-  y = sqrt(sum((y .- r) .^ 2) / length(y));
+function err = rmse(y, r)
+  err = sqrt(sum((y .- r) .^ 2) / length(y));
 end
 
 
