@@ -26,4 +26,6 @@ Nightmare({ show: process.env.SHOW })
   .click('.accountMenu__signout-button')
   .wait('#landingLogin')
   .end()
-  .catch((error) => console.error('Login failed:', error))
+  .catch(function (error) {
+    console.error('Login failed:', error)
+  })
