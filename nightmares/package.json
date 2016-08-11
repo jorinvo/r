@@ -1,0 +1,13 @@
+{
+  "name": "nightmares",
+  "version": "1.0.0",
+  "description": "Some browser-based automations",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "jorin",
+  "license": "MIT",
+  "dependencies": {
+    "nightmare": "^2.6.1"
+  }
+}
