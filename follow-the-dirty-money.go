@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	start := "https://gist.githubusercontent.com/jorinvo/eb3d2b39d1af49ccca8f2abcc3c56f6a/raw/d92a341af9bc82ab2a284f7f3a4e72f0cca20f5e/0fc12f66-ee24-4d9d-ab9e-6caeee1c93c7.json"
+	start := "https://gist.githubusercontent.com/jorinvo/6f68380dd07e5db3cf5fd48b2465bb04/raw/c02b1e0b45ecb2e54b36e4410d0631a66d474323/fd0d929f-966f-4d1a-89cd-feee5a1c5347.json"
 	dollarMatch := regexp.MustCompile(`\$[0-9.,]+`)
 	var total float64
 	done := make(map[string]bool)
@@ -42,6 +42,7 @@ func main() {
 			str = strings.Replace(str, ",", ".", 1)
 			dollar, err := strconv.ParseFloat(str, 64)
 			fatal(err)
+			fmt.Println(d.Content)
 			total += dollar
 
 			for _, link := range d.Links {
