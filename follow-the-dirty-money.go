@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	start := "https://gist.githubusercontent.com/jorinvo/5459a9d1f1cf44c5d637866355266021/raw/e8d9b8424b208f037a9075c5f18fdd05537b3cb2/0a9eb60b-c25b-4af8-aab9-4b56bb1e0489.json"
-	dollarMatch := regexp.MustCompile(`(\$[0-9.,]+)|([0-9.,]+\$)`)
+	start := "https://gist.githubusercontent.com/jorinvo/eb3d2b39d1af49ccca8f2abcc3c56f6a/raw/d92a341af9bc82ab2a284f7f3a4e72f0cca20f5e/0fc12f66-ee24-4d9d-ab9e-6caeee1c93c7.json"
+	dollarMatch := regexp.MustCompile(`\$[0-9.,]+`)
 	var total float64
 	done := make(map[string]bool)
 	urls := make(chan string, 1000)
@@ -28,7 +28,8 @@ func main() {
 			}{}
 			err := getJSON(url, &d)
 			if err != nil {
-				fmt.Printf("failed to fetch URL '%s': %v", url, err)
+				log.Printf("failed to fetch URL '%s': %v", url, err)
+				break
 			}
 
 			if done[d.ID] {
@@ -37,7 +38,7 @@ func main() {
 			done[d.ID] = true
 
 			str := dollarMatch.FindString(d.Content)
-			str = strings.Replace(str, "$", "", 1)
+			str = strings.Trim(str, "$,.")
 			str = strings.Replace(str, ",", ".", 1)
 			dollar, err := strconv.ParseFloat(str, 64)
 			fatal(err)
@@ -47,7 +48,7 @@ func main() {
 				urls <- link
 			}
 		default:
-			fmt.Printf("Total: $%.2f", total)
+			fmt.Printf("transactions: %d, total: $%.2f", len(done), total)
 			close(urls)
 			return
 		}
