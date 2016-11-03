@@ -1,0 +1,31 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/disintegration/imaging",
+			"repository": "https://github.com/disintegration/imaging",
+			"vcs": "git",
+			"revision": "5b7e22645c93e3f3911b36b7d66bf8799f3eddfd",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/image/bmp",
+			"repository": "https://go.googlesource.com/image",
+			"vcs": "git",
+			"revision": "8874bef159af77ab9e746fc3c80b2219b3652045",
+			"branch": "master",
+			"path": "bmp",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/image/tiff",
+			"repository": "https://go.googlesource.com/image",
+			"vcs": "git",
+			"revision": "8874bef159af77ab9e746fc3c80b2219b3652045",
+			"branch": "master",
+			"path": "/tiff",
+			"notests": true
+		}
+	]
+}

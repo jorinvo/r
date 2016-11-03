@@ -1,0 +1,21 @@
+$ time ./imagemap-magick
+
+real    0m9.796s
+user    0m23.752s
+sys     0m0.124s
+
+
+
+$ time ./imagemap-imaging
+
+real    0m18.535s
+user    0m41.752s
+sys     0m0.244s
+
+
+
+$ time ./imagemap-imaging-parallel
+
+real    0m12.610s
+user    0m46.880s
+sys     0m0.516s
