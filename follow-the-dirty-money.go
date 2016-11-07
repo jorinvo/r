@@ -14,7 +14,7 @@ func main() {
 	start := "https://gist.githubusercontent.com/jorinvo/6f68380dd07e5db3cf5fd48b2465bb04/raw/c02b1e0b45ecb2e54b36e4410d0631a66d474323/fd0d929f-966f-4d1a-89cd-feee5a1c5347.json"
 	dollarMatch := regexp.MustCompile(`\$[0-9.,]+`)
 	var total float64
-	done := make(map[string]bool)
+	visited := make(map[string]bool)
 	urls := make(chan string, 1000)
 	urls <- start
 
@@ -32,10 +32,10 @@ func main() {
 				break
 			}
 
-			if done[d.ID] {
+			if visited[d.ID] {
 				break
 			}
-			done[d.ID] = true
+			visited[d.ID] = true
 
 			str := dollarMatch.FindString(d.Content)
 			str = strings.Trim(str, "$,.")
@@ -48,7 +48,7 @@ func main() {
 				urls <- link
 			}
 		default:
-			fmt.Printf("transactions: %d, total: $%.2f", len(done), total)
+			fmt.Printf("transactions: %d, total: $%.2f", len(visited), total)
 			close(urls)
 			return
 		}
