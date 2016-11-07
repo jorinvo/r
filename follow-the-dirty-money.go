@@ -42,7 +42,6 @@ func main() {
 			str = strings.Replace(str, ",", ".", 1)
 			dollar, err := strconv.ParseFloat(str, 64)
 			fatal(err)
-			fmt.Println(d.Content)
 			total += dollar
 
 			for _, link := range d.Links {
