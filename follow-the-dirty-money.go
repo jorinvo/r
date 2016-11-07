@@ -36,9 +36,7 @@ func main() {
 				t := transaction{}
 				err := getJSON(u, &t)
 				if err != nil {
-					log.Printf("failed to fetch URL '%s': %v", u, err)
-					wg.Done()
-					continue
+					log.Printf("failed to get JSON from '%s': %v", u, err)
 				}
 				transactions <- t
 			}
@@ -47,13 +45,15 @@ func main() {
 
 	go func() {
 		for t := range transactions {
-			if !visited[t.ID] {
+			if t.ID != "" && !visited[t.ID] {
 				visited[t.ID] = true
 				s := dollarMatch.FindString(t.Content)
 				s = strings.Trim(s, "$,.")
 				s = strings.Replace(s, ",", ".", 1)
 				dollar, err := strconv.ParseFloat(s, 64)
-				fatal(err)
+				if err != nil {
+					log.Fatal(err)
+				}
 				total += dollar
 				wg.Add(len(t.Links))
 				for _, link := range t.Links {
@@ -80,10 +80,4 @@ func getJSON(url string, target interface{}) error {
 	defer r.Body.Close()
 	err = json.NewDecoder(r.Body).Decode(&target)
 	return err
-}
-
-func fatal(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
