@@ -6,7 +6,11 @@ visited = set()
 
 
 def get_money(url):
-    transaction = requests.get(url).json()
+    try:
+        transaction = requests.get(url).json()
+    except Exception:
+        print('failed to get url')
+        return 0
     if transaction['id'] in visited:
         return 0
     match = re.search('\$[0-9,.]+', transaction['content'])
