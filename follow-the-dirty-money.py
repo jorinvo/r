@@ -7,11 +7,7 @@ total = 0
 urls = [start]
 
 while len(urls) > 0:
-    try:
-        transaction = requests.get(urls.pop()).json()
-    except Exception:
-        print('failed to get url')
-        continue
+    transaction = requests.get(urls.pop()).json()
     if transaction['id'] in visited:
         continue
     visited.add(transaction['id'])
