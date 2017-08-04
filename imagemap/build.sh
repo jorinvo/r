@@ -24,7 +24,7 @@ mkdir -p $BIN_DIR imagemap/images
 if [ "$GOOS" = "darwin" ]
 then
   echo "Add app icon"
-  cp $GOPATH/src/github.com/jorinvo/imagemap/Icon imagemap/imagemap.app
+  cp $GOPATH/src/github.com/jorinvo/imagemap/Icon* imagemap/imagemap.app
 fi
 
 echo "Create binary:"
