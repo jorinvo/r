@@ -1,0 +1,14 @@
+#!/bin/bash
+
+n=3000
+
+function run {
+  printf "\n\n%s: running...\n\n" "$1"
+  node "$1/server" &
+  node "$1/client" $n
+  kill "$(jobs -p)"
+  sleep 1
+}
+
+run zmq
+run http
