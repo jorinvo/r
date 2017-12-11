@@ -1,4 +1,5 @@
 const zmq = require('zeromq')
+const uuid = require('uuid/v4')
 
 const n = parseInt(process.argv[2], 10);
 
@@ -9,11 +10,11 @@ requester.on('message', (id, msg) => {
   delete handlers[id]
 })
 const send = msg => new Promise(done => {
-  const id = Math.random().toString()
+  const id = uuid()
   handlers[id] = done
   requester.send([id, msg])
 })
-const transport = 'ipc://bench.ipc' // or 'tcp://localhost:3000'
+const transport = 'tcp://localhost:3000' // or 'ipc://bench.ipc'
 requester.connect(transport)
 
 const run = async () => {
