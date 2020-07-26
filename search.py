@@ -85,7 +85,7 @@ def get_args():
 def crawl(urls, _frontier={}, _bases=None):
     '''
     Takes a list of urls as argument and crawls them recursivly until
-    no new url can be found.
+    no new url  be found.
 
     Returns a sorted list of tuples (url, content, links).
     `links` is a list of urls.
